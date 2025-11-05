@@ -1,0 +1,49 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title>Cowrie Events Viewer</title>
+  <style>
+    body{font-family:system-ui,Arial;margin:16px;background:#fafafa}
+    .event{padding:10px;margin-bottom:6px;border-radius:8px;background:white;box-shadow:0 1px 3px rgba(0,0,0,0.1)}
+    .ts{font-weight:600;color:#444}
+    .evt{color:#005f73}
+    pre{white-space:pre-wrap;margin:4px 0 0;font-size:13px;color:#333}
+  </style>
+</head>
+<body>
+  <h2>🐚 Cowrie Honeypot — Live Events</h2>
+  <div id="events">Loading...</div>
+
+<script>
+const EVENTS_URL = '/cowrie_out/cowrie_events.json'; // path to JSON (explained below)
+
+async function fetchEvents(){
+  try {
+    const res = await fetch(EVENTS_URL + '?t=' + Date.now());
+    if(!res.ok) throw new Error('Failed to fetch JSON');
+    const data = await res.json();
+    const list = data.events || [];
+    const container = document.getElementById('events');
+    container.innerHTML = '';
+    list.slice().reverse().forEach(e=>{
+      const d=document.createElement('div');
+      d.className='event';
+      d.innerHTML=`
+        <div class="ts">${e.ts} — <span class="evt">${e.evt}</span> — ${e.ip||'n/a'}</div>
+        <div>👤 ${e.user||''}  🔑 ${e.pw||''}</div>
+        ${e.cmd?'<pre>$ '+e.cmd+'</pre>':''}
+        ${e.url?'<pre>📎 '+e.url+'</pre>':''}
+      `;
+      container.appendChild(d);
+    });
+  } catch(err){
+    document.getElementById('events').innerHTML='❌ Error: '+err;
+  }
+}
+
+setInterval(fetchEvents, 2000); // refresh every 2s
+fetchEvents();
+</script>
+</body>
+</html>
